@@ -1,4 +1,4 @@
-import os
+import os,sys
 
 class repeatExtensionError(Exception):
 	def __init__(self,ext):
@@ -8,7 +8,8 @@ class repeatExtensionError(Exception):
     
 
 def main():
-	storage_name='./overwrite_data'
+	storage_name=os.path.abspath('./overwrite_data')
+	self_name=os.path.abspath(sys.argv[0])
 	over_paths=[]
 	over_exts=[]
 	dir=os.walk(storage_name)
@@ -26,12 +27,25 @@ def main():
 			seen_exts.append(ext)
 		else:
 			raise repeatExtensionError('.'+ext)
-	print(over_paths)
 	dir=os.walk('.')
 	requires_assistance={}
 	for root, dirs, files in dir:
 		for file in files:
-			file_arr=file
+			if os.path.abspath(root+'/'+file)==self_name or os.path.abspath(root)==storage_name:
+				continue
+			file_arr=file.split('.')
+			if len(file_arr)!=2:
+				continue
+			if file_arr[1] in over_exts:
+				requires_assistance[root+'/'+file]=over_paths[over_exts.index(file_arr[1])]
+	
+	for assist in requires_assistance:
+		file=open(requires_assistance[assist],'rb')
+		data=file.read()
+		file.close()
+		file=open(assist,'wb')
+		file.write(data)
+		file.close
 	
 if __name__=="__main__":
 	main()
